@@ -142,3 +142,55 @@ Priority 5: 用户手动复制粘贴
 ├── transcript.txt
 └── source-link.txt   # 原文 URL，方便回查
 ```
+
+## 🛡️ 诚实度契约
+
+> 详见 `references/honesty-rules.md`
+
+### ⚠️ 本场景最大风险
+
+NotebookLM Audio Overview 生成的"双人对话"是 **AI 演绎的虚拟主播**，不是真嘉宾说的话。
+听众有"听到 = 真实"的心理暗示，必须显著标注。
+
+### 完整度声明（按抓取路径分）
+
+| 抓取路径 | source_completeness | ai_inference_ratio |
+|---|---|---|
+| 用户 cookie 拿到完整文章 | full | medium（NotebookLM 演绎） |
+| AMP 部分内容 | partial | high |
+| 公众号镜像 | partial | high |
+| 仅元数据 | metadata-only | very high（不建议出播客） |
+
+### 输出 mp3 + transcript 必带
+
+播客文件本身改不了，但**目录里必须放一份说明文件**：
+
+```markdown
+# 听之前请先读
+
+🤖 本播客由 NotebookLM 基于以下 source 演绎生成：
+- 原文 URL: [link]
+- 完整度: [full / partial / metadata-only]
+
+⚠️ 播客中的对话内容**不是任何真人说过的**。
+两位"主持人"是 NotebookLM 生成的虚拟人，他们的判断/分析/演绎可能：
+- 不在原文中出现
+- 包含 AI 训练数据的背景知识
+- 把单一观点扩展为辩论形式
+
+请以原文为准，把播客作为"快速过一遍主旨"的辅助工具。
+```
+
+### 输出 schema 必带
+
+```json
+{
+  "source_completeness": "...",
+  "ai_inference_ratio": "high",
+  "method": "NotebookLM Audio Overview",
+  "warnings": [
+    "播客内容为 AI 演绎，非真人对话",
+    "判断和分析可能不在原文出现"
+  ]
+}
+```

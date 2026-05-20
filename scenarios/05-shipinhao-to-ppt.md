@@ -179,3 +179,57 @@ B 站 / 抖音 / 小红书视频则可以走标准 yt-dlp 路径。
 ```
 
 AI 内部：每个视频独立 pipeline → 最后用 LLM 做章节合并 → 输出一份完整 deck。
+
+## 🛡️ 诚实度契约
+
+> 详见 `references/honesty-rules.md`
+
+### ⚠️ 本场景最大风险
+
+**教程系列视频走"元数据路径"时，AI 没看视频内容**，PPT 里的：
+- 各页要点：基于章节标题的推断
+- Speaker Notes：AI 编的"建议讲法"，不是原视频内容
+
+绝不能让用户以为 PPT 是从视频"提炼"出来的。
+
+### 完整度声明（按路径分）
+
+| 路径 | source_completeness | ai_inference_ratio |
+|---|---|---|
+| A 教程系列只看元数据 | metadata-only | high |
+| B 长视频走转写 | full | medium |
+| C 视频号录屏后转写 | full | medium |
+
+### 标注规则（PATH A）
+
+- 章节标题 + 时长：直陈，标 *(来自视频元数据)*
+- 各页"要点"：标 *(基于章节标题推测，未观看视频)*
+- "Speaker Notes" 重命名为 **"推荐讲法（AI 建议）"**，避免假装是从视频抄的
+- 模块划分：标 *(AI 建议的逻辑分组)*
+
+### 标注规则（PATH B/C）
+
+- 转写文字段落：直陈
+- PPT 要点：基于转写做的提炼，标 *(基于转写)*
+- Speaker Notes：可以更接近原讲者表述，但仍标 *(AI 整理)*
+
+### 输出 schema 必带
+
+```json
+{
+  "source_completeness": "metadata-only | full",
+  "ai_inference_ratio": "high | medium",
+  "method": "yt-dlp 元数据 / Whisper 转写 / Get笔记 转写",
+  "warnings": [
+    "PATH A：未观看视频，PPT 内容基于章节标题",
+    "Speaker Notes 为 AI 推荐讲法，不是原作者表达"
+  ]
+}
+```
+
+### 升级路径
+
+如果 PATH A 输出质量不够，升级到 PATH B：
+1. 让用户确认是否要下载和转写（耗时 30-60 min）
+2. 走完整 yt-dlp + Whisper pipeline
+3. ai_inference_ratio 降到 medium
