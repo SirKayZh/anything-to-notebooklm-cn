@@ -94,6 +94,7 @@ anything-to-notebooklm-cn/
 ├── references/
 │   ├── installation-cn.md                # 国内化安装详细步骤
 │   ├── china-network.md                  # 国内网络方案
+│   ├── tool-map.md                       # 工具能力地图（AI 调用前必读）
 │   ├── paywall-strategies-cn.md          # 付费墙国内重排
 │   └── troubleshooting.md                # 排错
 ├── scenarios/                            # 5 个场景 SOP
@@ -102,11 +103,9 @@ anything-to-notebooklm-cn/
 │   ├── 03-zsxq-to-mindmap.md
 │   ├── 04-caixin-to-podcast.md
 │   └── 05-shipinhao-to-ppt.md
-├── scripts/
-│   ├── check-prereq.sh                   # 前置依赖检查
-│   └── paywall-priority.json             # 付费墙优先级配置
-└── assets/
-    └── publish-to-clawhub.md             # 发布到 Skill Hub 指南
+└── scripts/
+    ├── check-prereq.sh                   # 前置依赖检查
+    └── paywall-priority.json             # 付费墙优先级配置
 ```
 
 ---
