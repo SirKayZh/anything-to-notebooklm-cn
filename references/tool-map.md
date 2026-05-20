@@ -23,6 +23,14 @@
 - ✅ 标题、作者、公众号、正文、内嵌链接、图片 URL、表格数据全部抓到
 - ✅ 不需要 wexin-read MCP
 
+抓 https://www.xiaoyuzhoufm.com/podcast/<id>：
+- ✅ 节目名、嘉宾、时长、**完整章节时间戳**、shownotes、推荐链接
+- ❌ 拿不到音频文件 URL（小宇宙防盗链）—— 但通常不需要
+
+抓 https://www.bilibili.com/video/BV<id>：
+- ✅ 标题、UP主、时长、简介、播放量等元数据
+- ❌ 视频本身需要 yt-dlp，但元数据 WebFetch 已够用
+
 ### 坑
 
 - 输出会被 LLM 总结，**不一定是逐字原文**。要原文请在 prompt 明确「保留全文不要摘要」
@@ -194,11 +202,31 @@ ima-skill:notes / ima-skill:knowledge-base
 
 ## 9. 标准库（ffmpeg / yt-dlp / Whisper.cpp）
 
-| 工具 | 用途 |
-|---|---|
-| `ffmpeg` | 提取音轨、抽关键帧、合并音视频 |
-| `yt-dlp` | B 站、YouTube、抖音、小红书视频下载 |
-| `whisper.cpp` | 本地音频转写（无 API 时兜底） |
+| 工具 | 用途 | 调用 |
+|---|---|---|
+| `ffmpeg` | 提取音轨、抽关键帧、合并音视频 | `ffmpeg -i video.mp4 -vn audio.m4a` |
+| `yt-dlp` | B站/YouTube/抖音/小红书视频下载 | `python3 -m yt_dlp <URL>` |
+| `whisper.cpp` | 本地音频转写（无 API 时兜底） | `./main -m models/ggml-large-v3.bin -f audio.wav` |
+
+### yt-dlp 实战技巧（2026-05-20 实测）
+
+教程类系列视频**优先做元数据探查**，**不要**直接下载：
+
+```bash
+# 仅获取分 P 清单（秒级，不下载视频）
+python3 -m yt_dlp --skip-download \
+  --print "p%(playlist_index)s | %(title)s | %(duration_string)s" \
+  <URL>
+
+# 优先尝试拿字幕（B站部分视频有内嵌字幕）
+python3 -m yt_dlp --write-sub --sub-lang zh --skip-download <URL>
+```
+
+安装方式：
+```bash
+pip3 install --user yt-dlp
+# 用 `python3 -m yt_dlp` 调用，避免 PATH 问题
+```
 
 ---
 

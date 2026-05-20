@@ -36,34 +36,55 @@ B 站 / 抖音 / 小红书视频则可以走标准 yt-dlp 路径。
 
 ## 工作流
 
+> ✅ **2026-05-20 实测发现**：教程类系列视频（每集都有清晰章节标题）**不需要转写音频**。`yt-dlp --skip-download --print` 秒级拿到所有分 P 标题 + 时长，直接基于章节出大纲质量已足够。22 集教程从输入到出 PPT 大纲全程 < 5 分钟。
+
+### 视频类型 → 处理路径决策
+
 ```
-[Step 1] 视频获取（按来源分流）
+视频是哪种？
+├─ 教程系列（章节明确，如 BV1Dx411z7gb）
+│   → yt-dlp 元数据 + 章节标题 → 直接出 PPT 大纲（推荐 ✅）
+├─ 单集长视频（演讲、分享、访谈）
+│   → 下载 + 字幕/转写 → 内容摘要 → PPT 大纲
+└─ 短视频 / 视频号
+    → 下载 / 录屏 → Whisper 转写 → PPT 大纲
+```
 
-  CASE A: 微信视频号
-    ├─ AI 引导用户：用 QuickTime / 微信电脑版录屏
-    ├─ 用户提供本地视频文件
-    └─ 输出：video.mp4
+### 详细步骤
 
-  CASE B: B站
-    ├─ yt-dlp <BV 号或链接>
-    └─ 输出：video.mp4 + 字幕 srt（如有）
+```
+[Step 1] 元数据探查（**任何视频都先做这步**）
+  ├─ python3 -m yt_dlp --skip-download --print "<format>" <URL>
+  ├─ 提取：标题、UP主、时长、分 P 列表（如有）、字幕可用性
+  └─ 输出：playlist.txt + meta.json
 
-  CASE C: 抖音 / 小红书
-    ├─ yt-dlp（部分支持）
-    └─ 失败则同 CASE A
+[Step 2] 路径分支
 
-  CASE D: 用户直接给本地视频
-    └─ 跳到 Step 2
+  PATH A（教程系列，章节明确）：
+    ├─ 跳过下载和转写
+    ├─ 章节标题 + 时长 → LLM 直接出大纲
+    └─ 输出：outline.md
 
-[Step 2] 提取音轨 + 关键帧
-  ├─ ffmpeg -i video.mp4 -vn audio.m4a
-  ├─ ffmpeg 按时间间隔（每 30s 一张）抽关键帧 → frames/
-  └─ 输出：audio.m4a + frames/{ts}.jpg
+  PATH B（长视频，需详细内容）：
+    ├─ yt-dlp 下载视频/字幕
+    ├─ 有内嵌字幕 → 直接用字幕
+    ├─ 无字幕 → ffmpeg 抽音轨 → Whisper / Get笔记 转写
+    └─ 输出：transcript.txt
 
-[Step 3] 转写
-  ├─ 优先：Get笔记 API（带说话人分离）
-  ├─ 次选：Whisper.cpp 本地（large-v3 模型）
-  └─ 输出：transcript.txt（含时间戳）
+  PATH C（视频号 / 抖音 / 小红书）：
+    ├─ 视频号：用户录屏后给本地文件
+    ├─ 抖音/小红书：yt-dlp 试试，失败让用户提供
+    └─ 输出：video.mp4 → 进入 Step 3
+
+[Step 3] 渲染 PPT 大纲
+  ├─ 用 LLM 把内容整理成 25 ± 3 页大纲（JSON）
+  ├─ 每页：标题 / 要点 / 演讲者备注 / ts 时间戳
+  └─ 输出：outline.json
+
+[Step 4] 生成 PPT
+  ├─ Markdown 大纲 → Marp / Slidev 渲染 → PDF/PPTX
+  ├─ 或 python-pptx 模板填充
+  └─ 输出：deck.pdf / deck.pptx
 
 [Step 4] 上传 NotebookLM
   ├─ source 1：transcript.txt

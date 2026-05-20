@@ -29,25 +29,31 @@
 
 ## 工作流
 
+> ✅ **2026-05-20 实测简化**：小宇宙网页版的 shownotes 通常已包含**完整章节时间戳 + 嘉宾信息 + 节目简介**，WebFetch 直接拿到这些信息就足够生成高质量摘要，**很多场景下根本不需要音频转写**。
+
 ```
-[Step 1] 解析小宇宙单集
-  ├─ 抓单集页面提取音频 URL（小宇宙是 m4a）
-  ├─ 元数据：节目名、单集名、嘉宾、时长、封面
-  └─ 输出：audio_url + meta
+[Step 1] 抓取单集页面（WebFetch）
+  ├─ 输入：小宇宙 episode 或 podcast URL
+  ├─ 输出：节目名、单集名、嘉宾、时长、章节时间戳、shownotes
+  └─ 注意：拿不到音频 URL（小宇宙防盗链），但通常不需要
 
-[Step 2] 调用 Get笔记 API 转写
-  ├─ POST 音频 URL，等待回调（2-5 分钟）
-  ├─ 返回逐字稿 + 时间戳 + 说话人分离
-  └─ 输出：transcript.json
+[Step 2A] 优先：基于章节时间戳直接出摘要（推荐 ✅）
+  ├─ 章节标题 + 节目简介 + 嘉宾信息 → LLM 摘要
+  ├─ 输出质量：金句、要点、推荐延伸 都能产出
+  └─ 速度：秒级
 
-[Step 3] 上传 NotebookLM
-  ├─ 创建 notebook（命名：<节目名> · <单集名>）
-  ├─ 把 transcript.txt 作为 source 上传
-  └─ 等待索引完成
+[Step 2B] 备选：转写音频（仅当章节信息不全）
+  ├─ Get笔记 API（需 GETNOTE_API_KEY）
+  ├─ 或 Whisper.cpp 本地（large-v3）
+  └─ 输出：完整逐字稿
+
+[Step 3] 上传 NotebookLM（可选，C 方案可跳过）
+  ├─ 仅当需要 NotebookLM Audio Overview 时才用
+  └─ 普通摘要：直接用 LLM 处理
 
 [Step 4] 生成结构化摘要
   ├─ 按选定风格调用对应 prompt
-  ├─ 强制要求每条要点带时间戳（mm:ss）
+  ├─ 每条要点带时间戳（mm:ss）
   └─ 输出：summary.md
 
 [Step 5] 落地
