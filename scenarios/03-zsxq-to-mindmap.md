@@ -48,6 +48,8 @@
   ├─ 把文本作为 source 上传
   └─ 等待索引
 
+  ⚠️ **C 方案（短文本跳过 NotebookLM）**：若文本 &lt; 2000 字且用户未指定要 NotebookLM 输出，可跳过 Step 2-3，直接 LLM 结构化。在 mindmap.md 顶部注明"场景 3 SOP（C 方案，跳过 NotebookLM 直接 LLM 出 mindmap）"。
+
 [Step 3] 调用 NotebookLM Mind Map 工具
   ├─ NotebookLM 内置 Mind Map 生成
   ├─ 提取 JSON 树结构
