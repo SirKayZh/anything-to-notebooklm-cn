@@ -64,35 +64,60 @@ Priority 5: 用户手动复制粘贴
 
 ## 工作流
 
-```
-[Step 1] 抓取（按上述优先级）
-  └─ 输出：article.md
+### 生成路径决策树
 
-[Step 2] 内容预处理
+```
+财新 URL / 文章文本
+  ↓
+[Step 1] 抓取（按优先级）→ article.md
+  ↓
+[Step 2] 检测 NotebookLM 可用性
+  └─ `notebooklm status` → 可用 → 走路径 A（推荐，Audio Overview 效果最好）
+  └─ 不可用 → 降级走路径 B（直接 LLM 生成播客文字稿）
+```
+
+### 路径 A：NotebookLM 路径（推荐）
+
+```
+[Step A1] 内容预处理
   ├─ 财新特有：作者信息、发表日期、文末"特别声明"剥离
-  ├─ 财新长文常含图表 → 提取图片描述（图片URL在Markdown中保留）
+  ├─ 财新长文常含图表 → 提取图片描述
   └─ 输出：clean_article.md
 
-[Step 3] 上传 NotebookLM
+[Step A2] 上传 NotebookLM
   ├─ 创建 notebook（命名：财新·<文章标题>）
   ├─ 添加 source
   └─ 等待索引
 
-[Step 4] 生成 Audio Overview（核心）
-  ├─ NotebookLM "生成 Audio Overview" 功能
+[Step A3] 生成 Audio Overview（核心）
+  ├─ `notebooklm generate audio`
   ├─ 自定义 prompt（控制风格 / 时长）
   └─ 等待生成（通常 3-8 分钟）
 
-[Step 5] 下载 mp3 + transcript
+[Step A4] 下载 mp3 + transcript
   ├─ 自动下载到 ~/Downloads/notebooklm-cn/caixin-podcast/<日期>/
   ├─ 文件命名：<日期>-<标题截短>.mp3
   └─ 同目录附 transcript.txt
 
-[Step 6] 询问是否同步到通勤设备
+[Step A5] 询问落地
   ├─ AirDrop 到手机？
-  ├─ 上传到播客 App（Pocket Casts / Castro 通过 RSS）？
+  ├─ 上传到播客 App？
   └─ 写入 IMA / 飞书（保存文字稿）？
 ```
+
+### 路径 B：C 方案（降级 fallback）
+
+```
+[Step B1] LLM 生成播客对话稿
+  → 将 article.md 按"通勤播客"prompt 转换为双人对话文字稿
+  → 保留关键数据和引用
+
+[Step B2] 输出 podcast-script.md（含时间戳估算）
+
+[Step B3] 落地同上
+```
+
+---
 
 ## Audio Overview 自定义 Prompt
 

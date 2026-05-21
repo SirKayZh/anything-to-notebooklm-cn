@@ -43,28 +43,46 @@
   ├─ 自动检测：单帖 / 多帖合集
   └─ 多帖：自动按 "## " 分隔切片
 
-[Step 2] 上传 NotebookLM
+[Step 2] 检测 NotebookLM 可用性
+  └─ `notebooklm status` → 可用 → 走路径 A
+  └─ 不可用 / 文本 < 2000 字 → 降级走路径 B（C 方案）
+```
+
+### 路径 A：NotebookLM 路径（推荐）
+
+```
+[Step A1] 上传 NotebookLM
   ├─ 创建 notebook（命名："<星球名>·<主题>"）
   ├─ 把文本作为 source 上传
   └─ 等待索引
 
-  ⚠️ **C 方案（短文本跳过 NotebookLM）**：若文本 &lt; 2000 字且用户未指定要 NotebookLM 输出，可跳过 Step 2-3，直接 LLM 结构化。在 mindmap.md 顶部注明"场景 3 SOP（C 方案，跳过 NotebookLM 直接 LLM 出 mindmap）"。
-
-[Step 3] 调用 NotebookLM Mind Map 工具
-  ├─ NotebookLM 内置 Mind Map 生成
+[Step A2] 调用 NotebookLM Mind Map 工具
+  ├─ `notebooklm generate mind-map`
+  ├─ `notebooklm artifact wait <task_id>`
   ├─ 提取 JSON 树结构
   └─ 输出：raw_mindmap.json
 
-[Step 4] 转换为多格式
+[Step A3] 转换为多格式
   ├─ JSON → Markdown 大纲（`-` 缩进）
   ├─ JSON → Mermaid mindmap 语法
   └─ 输出：mindmap.md（含两版）
+```
 
-[Step 5] 可选落地
+### 路径 B：C 方案（降级 / 短文本）
+
+⚠️ 若 `notebooklm status` 失败，或文本 < 2000 字且用户未指定要 NotebookLM 输出，可跳过 NotebookLM，直接 LLM 结构化。在 mindmap.md 顶部注明"场景 3 SOP（C 方案，跳过 NotebookLM 直接 LLM 出 mindmap）"。
+
+```
+[Step B1] LLM 直接结构化
+  → 基于 mindmap prompt 生成 JSON 树
+
+[Step B2] 输出 mindmap.md（含 Markdown 大纲 + Mermaid 代码块）
+```
+
+### [Step 3] 可选落地
   → 询问用户是否同步到飞书 / IMA
   → 飞书：含 mermaid 渲染的 docx
   → IMA：纯 Markdown 笔记
-```
 
 ## Mermaid 模板
 

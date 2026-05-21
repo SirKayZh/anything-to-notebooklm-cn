@@ -76,39 +76,50 @@ B 站 / 抖音 / 小红书视频则可以走标准 yt-dlp 路径。
     ├─ 抖音/小红书：yt-dlp 试试，失败让用户提供
     └─ 输出：video.mp4 → 进入 Step 3
 
-[Step 3] 渲染 PPT 大纲
-  ├─ 用 LLM 把内容整理成 25 ± 3 页大纲（JSON）
-  ├─ 每页：标题 / 要点 / 演讲者备注 / ts 时间戳
-  └─ 输出：outline.json
+[Step 3] 检测 NotebookLM 可用性
+  └─ `notebooklm status` → 可用 → 走路径 A（生成 Slide Deck）
+  └─ 不可用 → 降级走路径 B（本地 LLM 直接出大纲）
 
-[Step 4] 生成 PPT
-  ├─ Markdown 大纲 → Marp / Slidev 渲染 → PDF/PPTX
-  ├─ 或 python-pptx 模板填充
-  └─ 输出：deck.pdf / deck.pptx
+### 路径 A：NotebookLM 路径（推荐）
 
-[Step 4] 上传 NotebookLM
+```
+[Step A1] 长视频下载 + 转写（如 Step 2 选了 PATH B/C）
+  ├─ yt-dlp 下载 / 字幕提取
+  ├─ ffmpeg 抽音轨
+  └─ Whisper / Get笔记 转写 → transcript.txt
+
+[Step A2] 上传 NotebookLM
   ├─ source 1：transcript.txt
   ├─ source 2：（可选）视频元数据（标题、UP 主、简介）
   └─ 等待索引
 
-[Step 5] 生成 PPT 大纲（核心）
-  ├─ 调用 NotebookLM 自定义 prompt（见下）
-  ├─ 输出：JSON（每页：标题/要点/讲者备注/对应视频时间戳）
+[Step A3] 生成 Slide Deck
+  ├─ `notebooklm generate slide-deck`
+  ├─ `notebooklm artifact wait <task_id>`
+  ├─ `notebooklm download slide-deck ./deck.pdf`
+  └─ 输出：deck.pdf
+
+[Step A4] 选配封面图（关键帧匹配）
+  ├─ 每页根据时间戳从 frames/ 取最接近的关键帧
+  ├─ 对截图做轻度增强
+  └─ 输出：每页配图
+```
+
+### 路径 B：C 方案（降级 fallback）
+
+```
+[Step B1] LLM 直接渲染 PPT 大纲
+  ├─ 用 LLM 把内容整理成 25 ± 3 页大纲（JSON）
+  ├─ 每页：标题 / 要点 / 演讲者备注 / ts 时间戳
   └─ 输出：outline.json
 
-[Step 6] 选配封面图（关键帧匹配）
-  ├─ 每页根据时间戳，从 frames/ 取最接近的关键帧
-  ├─ 对截图做轻度增强（去模糊、加 watermark "原视频:<UP主>"）
-  └─ 输出：每页配图
+[Step B2] 生成 PPT
+  ├─ Markdown 大纲 → Marp / Slidev 渲染 → PDF/PPTX
+  ├─ 或 python-pptx 模板填充
+  └─ 输出：deck.pdf / deck.pptx
+```
 
-[Step 7] 渲染 PPT
-  if 格式 == PDF/PPTX:
-    → 用 python-pptx 模板填充
-  if 格式 == Marp md:
-    → 输出 .md，让用户自己用 Marp / Slidev 渲染
-  └─ 输出：deck.pdf/pptx/md
-
-[Step 8] 输出
+[Step 4] 输出
   └─ ~/Downloads/notebooklm-cn/video-to-ppt/<日期>/
 ```
 

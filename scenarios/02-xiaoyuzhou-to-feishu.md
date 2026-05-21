@@ -47,9 +47,33 @@
   ├─ 或 Whisper.cpp 本地（large-v3）
   └─ 输出：完整逐字稿
 
-[Step 3] 上传 NotebookLM（可选，C 方案可跳过）
-  ├─ 仅当需要 NotebookLM Audio Overview 时才用
-  └─ 普通摘要：直接用 LLM 处理
+[Step 3] 检测 NotebookLM 可用性
+  └─ `notebooklm status` → 可用 → 走路径 A（生成 Audio Overview）
+  └─ 不可用 → 降级走路径 B（直接 LLM 摘要）
+
+### 路径 A：NotebookLM Audio Overview（推荐）
+
+```
+[Step A1] 写逐字稿为 .txt
+  → 将转写稿或章节摘要写入 /tmp/podcast.txt
+
+[Step A2] 上传 NotebookLM
+  notebooklm create "<节目名> EP<集数>"
+  notebooklm source add /tmp/podcast.txt --title "<单集标题>"
+
+[Step A3] 生成 Audio Overview
+  notebooklm generate audio
+  notebooklm artifact wait <task_id>
+  notebooklm download audio ./podcast.mp3
+
+[Step A4] 落地同上（飞书 / IMA）
+```
+
+### 路径 B：C 方案（降级 fallback）
+
+```
+直接跳到 Step 4：LLM 结构化摘要
+```
 
 [Step 4] 生成结构化摘要
   ├─ 按选定风格调用对应 prompt

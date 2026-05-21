@@ -28,27 +28,55 @@
 
 > ✅ **2026-05-20 实测简化**：WorkBuddy 自带 WebFetch 已能直接抓微信公众号正文（标题/作者/全文/链接），**无需上游 wexin-read MCP**。Playwright 仅作为兜底。
 
+### 生成路径决策树
+
 ```
-[Step 1] 抓取（按优先级）
-  ├─ P1: WorkBuddy WebFetch 直抓（推荐 ✅，零依赖）
-  │   prompt 示例："提取标题、作者、发布时间、正文、链接"
-  ├─ P2: 上游 wexin-read MCP（仅当 P1 抓不全时）
-  └─ 输出：article.md + meta.json
+公众号 URL
+  ↓
+[Step 1] WebFetch 抓取文章
+  ↓
+[Step 2] 检测 NotebookLM 可用性
+  └─ `notebooklm status` → 可用 → 走 NotebookLM 路径（推荐）
+  └─ 不可用 → 降级走 C 方案（本地 LLM）
+```
 
-[Step 2] 内容清洗
-  ├─ 去广告、二维码、阅读原文按钮（WebFetch 通常已过滤）
-  ├─ 公众号特殊字符转义
-  └─ 输出：干净 Markdown
+### 路径 A：NotebookLM 路径（推荐）
 
-[Step 3] 12 问深度分析（核心）
-  ├─ MVP 路径（推荐）：直接喂 article.md 给 LLM 跑 12 问
-  ├─ 精装路径（可选）：上传 NotebookLM 利用引用追溯
-  └─ 输出：analysis-report.md
+```
+[Step A1] 将 article.md 上传到 NotebookLM
+  notebooklm create "<文章标题>"
+  notebooklm source add article.md --title "<文章标题>"
 
-[Step 4] 递进式提问结构
+[Step A2] 生成 Audio Overview（播客）
+  notebooklm generate audio
+  notebooklm artifact wait <task_id>
+  notebooklm download audio ./output.mp3
+
+[Step A3] 生成深度报告
+  notebooklm generate report
+  notebooklm artifact wait <task_id>
+  notebooklm download report ./report.md
+
+[Step A4] 落地 → IMA / 飞书
+```
+
+### 路径 B：C 方案（降级 fallback）
+
+```
+[Step B1] 12 问深度分析（直接 LLM）
+  → 直接喂 article.md 给 LLM 跑 12 问
+
+[Step B2] 递进式提问结构
   Round 1（4 个）：核心论点、关键数据、作者立场、行业背景
   Round 2（4 个）：基于 R1 答案追问 → 对比、反例、隐藏假设、可证伪点
   Round 3（4 个）：基于 R2 答案追问 → 实操启示、可迁移框架、潜在风险、3 年趋势
+
+[Step B3] 输出：analysis-report.md
+```
+
+---
+
+### Step 3（通用）内容清洗
 
 [Step 5] 落地输出
   if 目标 == IMA Notes（私人收藏）:

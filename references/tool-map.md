@@ -178,14 +178,65 @@ ima-skill:notes / ima-skill:knowledge-base
 
 ---
 
-## 7. NotebookLM 相关（上游 CLI）
+## 7. notebooklm CLI（上游官方工具）
 
 | 项 | 内容 |
 |---|---|
-| **能力** | 创建 notebook、添加 source、生成 Audio Overview / Mind Map / Briefing Doc |
-| **依赖** | Google 账号 + 上游 install + `notebooklm login` 一次性授权 |
-| **国内** | 必须配代理 |
-| **本 Skill 替代方案** | C 方案：跳过 NotebookLM，直接用 LLM 出 12 问（场景 1 已验证） |
+| **能力** | 创建 notebook、添加 source、生成 Audio Overview / Mind Map / Briefing Doc / Quiz / Video 等 |
+| **安装** | `pip install notebooklm-cli` 或 `npm install -g @notebooklm/cli`（需确认官方包名） |
+| **认证** | `notebooklm login` → 浏览器授权 → 一次性完成 |
+| **国内可用性** | 🔴 需代理（notebooklm.google.com 在大陆封锁） |
+| **首选场景** | 场景 3（Mind Map）、场景 4（播客/Audio Overview）、场景 5（PPT/Slide Deck） |
+| **不适用场景** | 国内特供内容（公众号/小宇宙/知识星球）—— 先抓取再上传 |
+
+### 调用流程（3步）
+
+```bash
+# Step 1：创建 notebook（返回 notebook ID）
+notebooklm create "<标题>"
+
+# Step 2：添加 source（本地文件或 URL）
+notebooklm source add /path/to/file.txt --title "<源标题>"
+# 或直接传 URL（YouTube、网页等）
+notebooklm source add https://example.com/article
+
+# Step 3：生成内容并下载
+notebooklm generate <type>    # audio | mind-map | slide-deck | quiz | report | ...
+notebooklm artifact wait <task_id>   # 等待生成完成
+notebooklm download <type> <output_path>   # 下载到本地
+```
+
+### 生成类型对照
+
+| 类型 | 命令 | 输出格式 |
+|---|---|---|
+| 播客（Audio Overview） | `notebooklm generate audio` | `.mp3` |
+| 思维导图 | `notebooklm generate mind-map` | `.json` |
+| PPT | `notebooklm generate slide-deck` | `.pdf` |
+| 测验 | `notebooklm generate quiz` | `.md` |
+| 报告 | `notebooklm generate report` | `.md` |
+| 闪卡 | `notebooklm generate flashcards` | `.md` |
+
+### 检测可用性
+
+```bash
+notebooklm status 2>/dev/null && echo "✅ 可用" || echo "❌ 不可用"
+```
+
+### 降级触发条件
+
+- `notebooklm status` 失败（未安装 / 未登录 / 网络不可达）
+- 代理未配置 / 配置失败
+- 生成超时（Audio Overview 通常 3-5 分钟）
+
+### 降级路径
+
+```
+notebooklm 不可用
+  → 检测环境变量 PROXY / notebooklm_proxy
+  → 尝试设置代理重试
+  → 仍失败 → 降级到 C 方案（本地 LLM 直接生成）
+```
 
 ---
 

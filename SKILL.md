@@ -31,8 +31,11 @@ version: 0.1.0
 ## 工作流（所有场景统一）
 
 ```
-1. 抓取 → 2. 清洗 → 3. NotebookLM 生成 → 4. 落地（IMA / 飞书 / 本地）
+1. 抓取 → 2. 清洗 → 3. 【优先】NotebookLM 生成
+                      ↘【降级】本地 LLM（C 方案）→ 4. 落地（IMA / 飞书 / 本地）
 ```
+
+**NotebookLM 可用性检测**：每次执行 Step 3 前先运行 `notebooklm status`，可用则走 Notebooks路径；失败则自动降级到 C 方案（本地 LLM 直接生成），不影响产出。
 
 匹配场景 → 读 `scenarios/0X-xxx.md` → 按 SOP 执行 → 失败走 `references/troubleshooting.md` 降级。
 
